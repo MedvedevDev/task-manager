@@ -66,6 +66,29 @@ app.get('/users/:id', async (req, res) => {
     // })
 })
 
+// Update user by ID
+app.patch('/users/:id', async (req, res) => {
+    // Mongoose ignoring updates properties that does not exist. Custom code to error response.
+    const allowedUpdates = ['name', 'age', 'email' , 'password'];
+    const updates = Object.keys(req.body);
+
+    // Determine is it every single update can be found in allowedUpdates array
+    const isValid = updates.every(update => allowedUpdates.includes(update)); // to check that every individual update is found
+    if (!isValid) {
+        return res.status(400).send({ "error": "Invalid updates" });
+    }
+
+    try {
+        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true , runValidators: true });
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        res.send(user)
+    } catch (error) {
+        res.status(400).send(error);
+    }
+})
+
 // Add new task
 app.post('/tasks', async (req, res) => {
     const task = new Task(req.body);
