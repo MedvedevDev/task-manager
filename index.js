@@ -145,6 +145,28 @@ app.get('/tasks/:id', async (req, res) => {
     // })
 })
 
+// Update task by ID
+app.patch('/tasks/:id', async (req, res) => {
+    // Mongoose ignoring updates properties that does not exist. Custom code to error response.
+    const allowedUpdates = ['description', 'completed'];
+    const updates = Object.keys(req.body);
+
+    const isValid = updates.every(update => allowedUpdates.includes(update));
+    if (!isValid) {
+        return res.status(400).send({ "error": "Invalid updates" });
+    }
+
+    try {
+        const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true , runValidators: true });
+        if (!task) {
+            return res.status(404).send('Task not found')
+        }
+        res.send(task);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+})
+
 app.listen(port, () => {
     console.log('Server is up')
 })
