@@ -76,16 +76,17 @@ router.patch('/users/:id', async (req, res) => {
 
         // To use middleware we refactor 'findByIdAndUpdate' function
         const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+
         updates.forEach(update => {
             // dynamically set property on User using bracket notation []
             user[update] = req.body[update];
         })
         await user.save(); // where middleware is actually executed
-
-        if (!user) {
-            return res.status(404).send('User not found');
-        }
         res.send(user)
+
     } catch (error) {
         res.status(400).send(error);
     }
