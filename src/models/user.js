@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
+        unique: true, //create index in mongodb database to guarantee uniqueness
         trim: true,
         lowercase: true,
         validate(value) {
@@ -38,6 +39,24 @@ const userSchema = new mongoose.Schema({
     }
 })
 
+// method directly on the User model
+userSchema.statics.findByCredentials = async (email, password) => {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        throw new Error('Unable to log in')
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordMatch) {
+        throw new Error('Unable to log in')
+    }
+
+    return user;
+}
+
+// Hash the plain text password before saving
 // 'pre' it is document middleware function - do something before user saved resource
 userSchema.pre('save', async function (next) { // not arrow function because we need to bind 'this' here
     // this - refers to the document being saved/updated
