@@ -1,7 +1,9 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 const saltRounds = 8;
+const secret = 'usersecret';
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -36,9 +38,28 @@ const userSchema = new mongoose.Schema({
                 throw new Error('invalid email')
             }
         }
-    }
+    },
+    tokens: [{
+        token: {
+            type: String,
+            required: true
+        }
+    }]
 })
 
+// Instance methods
+// Generate auth token
+userSchema.methods.getAuthToken = async function () {
+    const token = jwt.sign({ _id: this._id.toString()}, secret);
+
+    // Add token to array and save to database
+    this.tokens = this.tokens.concat({ token: token });
+    await this.save();
+
+    return token;
+}
+
+// Model methods
 // method directly on the User model
 userSchema.statics.findByCredentials = async (email, password) => {
     const user = await User.findOne({ email });
