@@ -44,7 +44,7 @@ router.post('/users/logoutAll', authMiddleware, async (req, res) => {
 })
 
 
-// Get all users
+// Get user personal info
 router.get('/users/me', authMiddleware, async (req, res) => {
     res.send(req.user);
 
@@ -73,32 +73,8 @@ router.post('/users', async (req, res) => {
     // })
 })
 
-
-// Get user by ID
-router.get('/users/:id', async (req, res) => {
-    const _id = req.params.id;
-    try {
-        const user = await User.findById(_id);
-        if (!user) {
-            return res.status(404).send('User not found');
-        }
-        res.status(200).send(user);
-    } catch (error) {
-        res.status(500).send(error);
-    }
-
-    // User.findById(_id).then(user => {
-    //     if(!user) {
-    //         return res.status(404).send('User not found');
-    //     }
-    //     res.status(200).send(user);
-    // }).catch(error => {
-    //     res.status(500).send(error);
-    // })
-})
-
 // Update user by ID
-router.patch('/users/:id', async (req, res) => {
+router.patch('/users/me', authMiddleware ,async (req, res) => {
     // Mongoose ignoring updates properties that does not exist. Custom code to error response.
     const allowedUpdates = ['name', 'age', 'email' , 'password'];
     const updates = Object.keys(req.body);
@@ -114,31 +90,35 @@ router.patch('/users/:id', async (req, res) => {
         //const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true , runValidators: true });
 
         // To use middleware we refactor 'findByIdAndUpdate' function
-        const user = await User.findById(req.params.id);
-        if (!user) {
-            return res.status(404).send('User not found');
-        }
+        // const user = await User.findById(req.params.id);
+        // if (!user) {
+        //     return res.status(404).send('User not found');
+        // }
 
         updates.forEach(update => {
             // dynamically set property on User using bracket notation []
-            user[update] = req.body[update];
+            //user[update] = req.body[update];
+            req.user[update] = req.body[update];
         })
-        await user.save(); // where middleware is actually executed
-        res.send(user)
+        await req.user.save(); // where middleware is actually executed
+        res.send(req.user)
 
     } catch (error) {
         res.status(400).send(error);
     }
 })
 
-// Delete user by ID
-router.delete('/users/:id', async (req, res) => {
+// Delete user
+router.delete('/users/me',authMiddleware , async (req, res) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
+        // const user = await User.findByIdAndDelete(req.user.id);
+        //
+        // if (!user) {
+        //     return res.status(404).send('User not found');
+        // }
 
-        if (!user) {
-            return res.status(404).send('User not found');
-        }
+        // remove() - mongoose method on document
+        await req.user.deleteOne();
         res.send('User deleted');
     } catch (error) {
         res.status(500).send(error);
