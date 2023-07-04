@@ -50,14 +50,38 @@ const userSchema = new mongoose.Schema({
 // Instance methods
 // Generate auth token
 userSchema.methods.getAuthToken = async function () {
-    const token = jwt.sign({ _id: this._id.toString()}, secret);
+    const user = this;
+
+    const token = jwt.sign({ _id: user._id.toString()}, secret);
 
     // Add token to array and save to database
-    this.tokens = this.tokens.concat({ token: token });
-    await this.save();
+    user.tokens = user.tokens.concat({ token: token });
+    await user.save();
 
     return token;
 }
+
+// Method for returning only public data
+// Behind the scenes res.send() uses JSON.stringify() method. We override its behaviour by applying the toJSON() method.
+// We use toJSON method to apply this for every route where 'user' is sent back to client (res.send(user))
+userSchema.methods.toJSON = function () {
+    const user = this;
+    const userObject = user.toObject();
+
+    delete userObject.password;
+    delete userObject.tokens;
+
+    return userObject;
+}
+// userSchema.methods.getUserPublicData = function () {
+//     const user = this;
+//     const userObject = user.toObject();
+//
+//     delete userObject.password;
+//     delete userObject.tokens;
+//
+//     return userObject;
+// }
 
 // Model methods
 // method directly on the User model
@@ -82,8 +106,11 @@ userSchema.statics.findByCredentials = async (email, password) => {
 userSchema.pre('save', async function (next) { // not arrow function because we need to bind 'this' here
     // this - refers to the document being saved/updated
     // isModified - it is mongoose method, checking if specified property modified
-    if (this.isModified('password')) {
-        this.password = await bcrypt.hash(this.password, saltRounds);
+
+    const user = this;
+
+    if (user.isModified('password')) {
+        user.password = await bcrypt.hash(user.password, saltRounds);
     }
 
     next()

@@ -21,3 +21,14 @@ app.use(taskRouter)
 app.listen(port, () => {
     console.log('Server is up')
 })
+
+const v = {
+    name: 'Alllllex',
+    age: 11
+}
+
+v.toJSON = function () {
+    return this.age
+
+}
+console.log(JSON.stringify(v))
