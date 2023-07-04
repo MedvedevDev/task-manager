@@ -1,6 +1,47 @@
 const express = require('express')
 const User = require("../models/user");
 const router = express.Router()
+const authMiddleware = require('../middleware/auth')
+
+// Log in
+router.post('/users/login', async (req, res) => {
+    try {
+        const user = await User.findByCredentials(req.body.email, req.body.password);
+        const token = await user.getAuthToken();
+        res.send({ user: user, token: token});
+    } catch (error) {
+        res.status(400).send(error);
+    }
+})
+
+// Log out
+router.post('/users/logout', authMiddleware,async (req, res) => {
+    try {
+        // since we are authenticated we already have access to user data
+        //token -> object with "token" property and "_id" property
+        // return true when the token we are currently looking at the one if used for auth
+        req.user.tokens = req.user.tokens.filter(token => {
+            return token.token !== req.token;
+        })
+        await req.user.save();
+
+        res.send();
+    } catch (error) {
+        res.status(500).status();
+    }
+})
+
+
+// Get all users
+router.get('/users/me', authMiddleware, async (req, res) => {
+    res.send(req.user);
+
+    // User.find({}).then(users => {
+    //     res.status(200).send(users);
+    // }).catch(error => {
+    //     res.status(500).send(error);
+    // })
+})
 
 // Add new user
 router.post('/users', async (req, res) => {
@@ -20,32 +61,6 @@ router.post('/users', async (req, res) => {
     // })
 })
 
-// Log in
-router.post('/users/login', async (req, res) => {
-    try {
-        const user = await User.findByCredentials(req.body.email, req.body.password);
-        const token = await user.getAuthToken();
-        res.send({ user: user, token: token});
-    } catch (error) {
-        res.status(400).send(error);
-    }
-})
-
-// Get all users
-router.get('/users', async (req, res) => {
-    try {
-        const users = await User.find({});
-        res.status(200).send(users);
-    } catch (error) {
-        res.status(500).send(error);
-    }
-
-    // User.find({}).then(users => {
-    //     res.status(200).send(users);
-    // }).catch(error => {
-    //     res.status(500).send(error);
-    // })
-})
 
 // Get user by ID
 router.get('/users/:id', async (req, res) => {
