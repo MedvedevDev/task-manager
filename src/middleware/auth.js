@@ -6,10 +6,6 @@ const authMiddleware = async (req, res, next) => {
     try {
         const token = req.header('Authorization').replace("Bearer ", ""); // replace to remove "Bearer " portion
         const decoded = jwt.verify(token, secret);
-        // 000000000000000000000000000000000
-        console.log(token)
-        console.log(decoded)
-        // 000000000000000000000000000000000
 
         const user = await User.findOne({ _id: decoded._id, 'tokens.token': token }); // find user with the correct ID who has auth token
 

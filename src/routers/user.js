@@ -27,7 +27,18 @@ router.post('/users/logout', authMiddleware,async (req, res) => {
 
         res.send();
     } catch (error) {
-        res.status(500).status();
+        res.status(500).send();
+    }
+})
+
+// Log Out all sessions
+router.post('/users/logoutAll', authMiddleware, async (req, res) => {
+    try {
+        req.user.tokens.splice(0, req.user.tokens.length);
+        await req.user.save();
+        res.send();
+    } catch (error) {
+        res.status(500).send();
     }
 })
 
