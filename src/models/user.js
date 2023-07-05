@@ -116,6 +116,13 @@ userSchema.pre('save', async function (next) { // not arrow function because we 
     next()
 })
 
+// virtual property - it`s relationship between two enteties (user-task)
+userSchema.virtual('tasks', {
+    ref: 'tasks',
+    localField: '_id', // name of the field in CURRENT(USERS) model that created relationship
+    foreignField: 'createdBy' // name of the field in the TASKS model that creates relationship
+})
+
 const User = mongoose.model('users', userSchema)
 
 module.exports = User

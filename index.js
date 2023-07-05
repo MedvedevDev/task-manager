@@ -1,6 +1,5 @@
 const express = require('express')
 require('./src/db/mongoose.js') //to run file and connect to db
-const Task = require('./src/models/task')
 const userRouter = require('./src/routers/user')
 const taskRouter = require('./src/routers/task')
 
@@ -21,3 +20,6 @@ app.use(taskRouter)
 app.listen(port, () => {
     console.log('Server is up')
 })
+
+
+
