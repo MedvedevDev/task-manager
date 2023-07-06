@@ -24,16 +24,26 @@ router.post('/tasks', authMiddleware, async (req, res) => {
     // })
 })
 
-// Get all tasks
+// Fetch completed/incompleted tasks
 router.get('/tasks', authMiddleware, async (req, res) => {
     try {
         // 1 solution
         // const tasks = await Task.find({ createdBy: req.user._id });
         // res.status(200).send(tasks);
-
         // 2 solution
-        await req.user.populate('tasks');
-        res.send(req.user.tasks);
+        // await req.user.populate('tasks');
+        // res.send(req.user.tasks);
+        const match = {}
+
+        if(req.query.completed) {
+            match.completed = req.query.completed === 'true';
+        }
+
+        await req.user.populate({
+            path: 'tasks',
+            match
+        })
+        res.send(req.user.tasks)
     } catch (error) {
         res.status(500).send(error);
     }

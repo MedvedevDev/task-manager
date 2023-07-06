@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const Task = require('../models/task')
 const saltRounds = 8;
 const secret = 'usersecret';
 
@@ -45,6 +46,8 @@ const userSchema = new mongoose.Schema({
             required: true
         }
     }]
+}, {
+    timestamps: true
 })
 
 // Instance methods
@@ -83,6 +86,13 @@ userSchema.methods.toJSON = function () {
 //     return userObject;
 // }
 
+// virtual property - it`s relationship between two enteties (user-task)
+userSchema.virtual('tasks', {
+    ref: 'tasks',
+    localField: '_id', // name of the field in CURRENT(USERS) model that created relationship
+    foreignField: 'createdBy' // name of the field in the TASKS model that creates relationship
+})
+
 // Model methods
 // method directly on the User model
 userSchema.statics.findByCredentials = async (email, password) => {
@@ -116,11 +126,11 @@ userSchema.pre('save', async function (next) { // not arrow function because we 
     next()
 })
 
-// virtual property - it`s relationship between two enteties (user-task)
-userSchema.virtual('tasks', {
-    ref: 'tasks',
-    localField: '_id', // name of the field in CURRENT(USERS) model that created relationship
-    foreignField: 'createdBy' // name of the field in the TASKS model that creates relationship
+// Delete user tasks when user is removed
+userSchema.pre('remove', async function(next) {
+    const user = this;
+    await Task.deleteMany({ createdBy: user._id })
+    next()
 })
 
 const User = mongoose.model('users', userSchema)

@@ -15,6 +15,8 @@ const taskSchema = new mongoose.Schema({
         required: true,
         ref: 'users' // relationship between tables created
     }
+}, {
+    timestamps: true
 })
 
 const Task = mongoose.model('tasks', taskSchema);
