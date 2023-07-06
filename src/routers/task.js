@@ -24,7 +24,9 @@ router.post('/tasks', authMiddleware, async (req, res) => {
     // })
 })
 
-// Fetch completed/incompleted tasks
+// GET /tasks?completed=true | Fetch completed/incompleted tasks
+// GET /tasks?limit=10&skip=20 | Pagination: limit(amount of documents displayed), skip(number of page)
+//GET /tasks?sortBy=createdAt:desc
 router.get('/tasks', authMiddleware, async (req, res) => {
     try {
         // 1 solution
@@ -33,15 +35,29 @@ router.get('/tasks', authMiddleware, async (req, res) => {
         // 2 solution
         // await req.user.populate('tasks');
         // res.send(req.user.tasks);
-        const match = {}
+        const match = {} // Property for the filter
+        const sort = {} // Property for the sorting
 
         if(req.query.completed) {
             match.completed = req.query.completed === 'true';
         }
 
+        if (req.query.sortBy) {
+            // name of the property is provided it dynamically
+            const parts = req.query.sortBy.split(':')
+            sort[parts[0]] = parts[1] === 'desc' ? -1 : 1; // 1 asc, -1 desc
+        }
+
+        const options = { // Property for the pagination
+            limit: parseInt(req.query.limit),
+            skip: parseInt(req.query.skip),
+            sort
+        }
+
         await req.user.populate({
             path: 'tasks',
-            match
+            match,
+            options
         })
         res.send(req.user.tasks)
     } catch (error) {
