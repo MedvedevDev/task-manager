@@ -1,6 +1,7 @@
 const express = require('express')
 const User = require("../models/user");
 const router = express.Router()
+const multer = require('multer')
 const authMiddleware = require('../middleware/auth')
 
 // Log in
@@ -123,6 +124,24 @@ router.delete('/users/me',authMiddleware , async (req, res) => {
     } catch (error) {
         res.status(500).send(error);
     }
+})
+
+const avatarUploader = multer({
+    dest: 'avatars',
+    limits: {
+        fileSize: 1_000_000, //bytes
+    },
+    fileFilter (req, file, cb) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            return cb(new Error('Invalid file extension. Should be jpg, jpeg or png.'));
+        }
+        cb(undefined, true);
+    }
+})
+
+// Upload avatar
+router.post('/users/me/avatar', avatarUploader.single('avatar'), (req, res) => {
+    res.status(200).send();
 })
 
 module.exports = router

@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 const secret = 'usersecret';
 
+// new request -> middleware -> run route handler
+// next() - letting express know that we are done with middleware function and pass to run route handler
 const authMiddleware = async (req, res, next) => {
     try {
         const token = req.header('Authorization').replace("Bearer ", ""); // replace to remove "Bearer " portion
