@@ -2,6 +2,7 @@ const express = require('express')
 const User = require("../models/user");
 const router = express.Router()
 const multer = require('multer')
+const sharp = require('sharp')
 const authMiddleware = require('../middleware/auth')
 
 // Log in
@@ -142,7 +143,9 @@ const avatarUploader = multer({
 // Upload avatar
 // Need to add authMiddleware to make sure that user is authenticated before making image uploads
 router.post('/users/me/avatar', authMiddleware, avatarUploader.single('avatar'), async (req, res) => {
-    req.user.avatar = req.file.buffer;
+    //req.user.avatar = req.file.buffer;
+    const buffer = await sharp(req.file.buffer).resize({ width:100, height: 100 }).png().toBuffer();
+    req.user.avatar = buffer;
     await req.user.save();
     res.status(200).send();
 }, (error, req, res, next) => { // to display JSON error instead of HTML
@@ -157,6 +160,22 @@ router.delete('/users/me/avatar', authMiddleware, async (req, res) => {
 }, (error, req, res, next) => { // to display JSON error instead of HTML
     res.status(400).send({ error: error.message });
 })
+
+// Serving up avatar
+router.get('/users/:id/avatar', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user || !user.avatar) {
+            throw new Error()
+        }
+
+        res.set('Content-Type', 'image/png');
+        res.send(user.avatar);
+    } catch (e) {
+        res.status(404).send()
+    }
+ })
 
 module.exports = router
 
