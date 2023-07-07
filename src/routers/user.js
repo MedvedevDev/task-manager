@@ -127,7 +127,7 @@ router.delete('/users/me',authMiddleware , async (req, res) => {
 })
 
 const avatarUploader = multer({
-    dest: 'avatars',
+    //dest: 'avatars',
     limits: {
         fileSize: 1_000_000, //bytes
     },
@@ -140,8 +140,20 @@ const avatarUploader = multer({
 })
 
 // Upload avatar
-router.post('/users/me/avatar', avatarUploader.single('avatar'), (req, res) => {
+// Need to add authMiddleware to make sure that user is authenticated before making image uploads
+router.post('/users/me/avatar', authMiddleware, avatarUploader.single('avatar'), async (req, res) => {
+    req.user.avatar = req.file.buffer;
+    await req.user.save();
     res.status(200).send();
+}, (error, req, res, next) => { // to display JSON error instead of HTML
+    res.status(400).send({ error: error.message });
+})
+
+// Delete avatar
+router.delete('/users/me/avatar', authMiddleware, async (req, res) => {
+    req.user.avatar = undefined;
+    await req.user.save();
+    res.status(200).send('Avatar deleted');
 }, (error, req, res, next) => { // to display JSON error instead of HTML
     res.status(400).send({ error: error.message });
 })
