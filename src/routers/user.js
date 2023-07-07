@@ -142,6 +142,8 @@ const avatarUploader = multer({
 // Upload avatar
 router.post('/users/me/avatar', avatarUploader.single('avatar'), (req, res) => {
     res.status(200).send();
+}, (error, req, res, next) => { // to display JSON error instead of HTML
+    res.status(400).send({ error: error.message });
 })
 
 module.exports = router
