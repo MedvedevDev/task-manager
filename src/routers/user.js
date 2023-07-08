@@ -4,6 +4,27 @@ const router = express.Router()
 const multer = require('multer')
 const sharp = require('sharp')
 const authMiddleware = require('../middleware/auth')
+const { sendWelcomeEmail, sendRemoveEmail } = require('../emails/account')
+
+// Add new user
+router.post('/users', async (req, res) => {
+    const user = new User(req.body);
+    try {
+        await user.save();
+        sendWelcomeEmail(user.email, user.name);
+
+        const token = await user.getAuthToken();
+        res.status(201).send({ user: user, token: token });
+    } catch (error) {
+        res.status(400).send(error);
+    }
+
+    // user.save().then((user) => {
+    //     res.status(201).send(user)
+    // }).catch((e) => {
+    //     res.status(400).send(e)
+    // })
+})
 
 // Log in
 router.post('/users/login', async (req, res) => {
@@ -57,24 +78,6 @@ router.get('/users/me', authMiddleware, async (req, res) => {
     // })
 })
 
-// Add new user
-router.post('/users', async (req, res) => {
-    const user = new User(req.body);
-    try {
-        await user.save();
-        const token = await user.getAuthToken();
-        res.status(201).send({ user: user, token: token });
-    } catch (error) {
-        res.status(400).send(error);
-    }
-
-    // user.save().then((user) => {
-    //     res.status(201).send(user)
-    // }).catch((e) => {
-    //     res.status(400).send(e)
-    // })
-})
-
 // Update user by ID
 router.patch('/users/me', authMiddleware ,async (req, res) => {
     // Mongoose ignoring updates properties that does not exist. Custom code to error response.
@@ -121,6 +124,7 @@ router.delete('/users/me',authMiddleware , async (req, res) => {
 
         // remove() - mongoose method on document
         await req.user.deleteOne();
+        sendRemoveEmail(req.user.email, req.user.name);
         res.send('User deleted');
     } catch (error) {
         res.status(500).send(error);

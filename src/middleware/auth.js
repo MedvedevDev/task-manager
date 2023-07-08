@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
+require('dotenv').config({path: __dirname + '/.env'})
 const User = require('../models/user')
-const secret = 'usersecret';
+const secret = process.env.JWT_SECRET;
 
 // new request -> middleware -> run route handler
 // next() - letting express know that we are done with middleware function and pass to run route handler
