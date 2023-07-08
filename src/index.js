@@ -1,8 +1,8 @@
 const express = require('express')
 require('dotenv').config({path: __dirname + '/.env'})
-require('./src/db/mongoose.js') //to run file and connect to db
-const userRouter = require('./src/routers/user')
-const taskRouter = require('./src/routers/task')
+require('../src/db/mongoose') //to run file and connect to db
+const userRouter = require('./routers/user')
+const taskRouter = require('./routers/task')
 
 const app = express()
 
